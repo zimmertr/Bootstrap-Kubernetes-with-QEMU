@@ -1,10 +1,10 @@
 ###############################################################################################
-#                                      -General Options-                                      # 
+#                                      -General Options-                                      #
 ###############################################################################################
 # These parameters are required.                                                              #
 ###############################################################################################
 
-# qcow2 image to use for your Virtual Machines: 
+# qcow2 image to use for your Virtual Machines:
 qcow2_image: 'https://cdimage.debian.org/cdimage/openstack/current-10/debian-10-openstack-amd64.qcow2'
 
 # Location to use for storing the qcow2 image. Be sure to end the absolute path with a '/'.
@@ -15,6 +15,22 @@ k8s_resource_pool: 'Kubernetes'
 
 # Path to the SSH Public Key on your Proxmox Server.
 k8s_ssh_key: '/root/.ssh/sol.milkyway.kubernetes.pub'
+
+# CIDR for the Calico Pod Network - MUST be different from your Kubernetes CIDR to avoid an IP conflict. Subnet size will automatically be set to /16.
+calico_cidr: '172.16.0.0'
+
+# URL for the Calico Network Policy:
+# Can be found here: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#tabs-pod-install-2
+calico_policy_url: 'https://docs.projectcalico.org/v3.8/manifests/calico.yaml'
+
+# The version of Docker to use on the hosts.
+# Make sure the version is listed here: https://kubernetes.io/docs/setup/release/notes/
+# You can list available versions with: `aptitude versions docker-ce`
+docker_version: '5:19.03.5~3-0~debian-buster'
+
+# The version of Kubernetes to install.
+# The newest release can be found here: https://kubernetes.io/docs/setup/release/notes/
+kubernetes_version: "v1.17.0"
 
 # VM IDs
 k8s_master_id: '4010'
@@ -31,14 +47,14 @@ k8s_node3_hn: 'Haumea'
 # Number of CPUs
 k8s_master_cpu: '2'
 k8s_node1_cpu: '4'
-k8s_node2_cpu: '4'
-k8s_node3_cpu: '4'
+k8s_node2_cpu: '2'
+k8s_node3_cpu: '2'
 
 # Amount of memory expressed in megabytes
 k8s_master_mem: '5120'
-k8s_node1_mem: '10240'
-k8s_node2_mem: '10240'
-k8s_node3_mem: '10240'
+k8s_node1_mem: '30720'
+k8s_node2_mem: '5120'
+k8s_node3_mem: '5120'
 
 # Disk Sizes
 k8s_master_size: '50G'
@@ -88,23 +104,9 @@ k8s_node1_stg: 'SaturnPool'
 k8s_node2_stg: 'SaturnPool'
 k8s_node3_stg: 'SaturnPool'
 
-# CIDR for the Calico Pod Network - MUST be different from your Kubernetes CIDR to avoid an IP conflict. Subnet size will automatically be set to /16.
-calico_cidr: '172.16.0.0'
-
-# URL for the Calico Network Policy: 
-# Can be found here: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#tabs-pod-install-2
-calico_policy_url: 'https://docs.projectcalico.org/v3.8/manifests/calico.yaml'
-
-# The URL for the Kubernetes Dashboard Manifest. Not locally hosted as it changes frequently.
-# Can be found in the `Getting Started` section of this page: https://github.com/kubernetes/dashboard/blob/master/README.md
-k8s_dashboard_url: 'https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta4/aio/deploy/recommended.yaml'
-
-# Service user created for the dashboard.
-k8s_user_name: 'tj'
-
 
 ###############################################################################################
-#                                     -Dashboard Options-                                     # 
+#                                     -Dashboard Options-                                     #
 ###############################################################################################
 # These parameters are only required if you intend to deploy the Kubernetes Dashboard to your #
 # cluster. If you wish to bind the Dashboard service to a Load Balanced IP Address, then      #
@@ -122,18 +124,25 @@ k8s_user_name: 'tj'
 # kubectl describe -n kube-system secret K8S_USER_NAME-token | grep token: | awk '{print $2}' #
 ###############################################################################################
 
-# The MetalLB Address Pool from which you want to obtain an IP address.
-dashboard_load_balancer_address_pool: 'VLAN50'
+# The URL for the Kubernetes Dashboard Manifest. Not locally hosted as it changes frequently.
+# Can be found in the `Getting Started` section of this page: https://github.com/kubernetes/dashboard/blob/master/README.md
+k8s_dashboard_url: 'https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-rc1/aio/deploy/recommended.yaml'
 
-# The IP address within the Address Pool to which you want to bind the service. 
-dashboard_load_balancer_ip: '192.168.50.100'
+# Service user created for the dashboard.
+k8s_user_name: 'tj'
+
+# The MetalLB Address Pool from which you want to obtain an IP address.
+dashboard_load_balancer_address_pool: 'layer2'
+
+# The IP address within the Address Pool to which you want to bind the service.
+dashboard_load_balancer_ip: '192.168.40.170'
 
 # The hostname with which you want to test connectivity to the IP Address after the deployment has completed.
 dashboard_hostname: 'amalthea.sol.milkyway'
 
 
 ###############################################################################################
-#                                        -VLAN Options-                                       # 
+#                                        -VLAN Options-                                       #
 ###############################################################################################
 # These parameters are only required if your network is configured with VLANs and you wish to #
 # specify which VLAN each of your Kubernetes nodes is allocated to. Leave these variables     #
@@ -148,7 +157,8 @@ k8s_node3_vlan: '40'
 
 
 ###############################################################################################
-#                                    -Unattended Upgrades-                                    # 
+#                                    -Unattended Upgrades-                                    #
+#                                WARNING: EXPERIMENTAL FEATURE                                #
 ###############################################################################################
 # These parameters are only required if you want to enable Unattended Upgrades on the         #
 # operating systems that comprise your Kubernetes master and worker nodes. None of these      #
@@ -168,7 +178,7 @@ k8s_node3_vlan: '40'
 # SMTP Server
 smtp_server: 'smtp.gmail.com'
 
-# SMTP Port 
+# SMTP Port
 smtp_port: '587'
 
 # SMTP Server username
@@ -192,7 +202,7 @@ mail_only_on_error: "true"
 # Automatically remove unused kernel packages.
 remove_unused_kernel_packages: "true"
 
-# Automatically remove unused dependencies. 
+# Automatically remove unused dependencies.
 remove_unused_dependencies: "true"
 
 # Automatically perform a reboot after upgrading if required.
@@ -206,7 +216,7 @@ remove_unused_dependencies: "true"
 
 
 ###############################################################################################
-#                                        -NFS Options-                                        # 
+#                                        -NFS Options-                                        #
 ###############################################################################################
 # These parameters are only required if you have an NFS server and would like to enable the   #
 # optional support for dynamic provisioning of Persistent Storage volumes for your pods.      #
@@ -229,7 +239,7 @@ nfs_reclaim_policy: 'Retain'
 
 
 ###############################################################################################
-#                                      -MetalLB Options-                                      # 
+#                                      -MetalLB Options-                                      #
 ###############################################################################################
 #                                                                                             #
 # WARNING: MetalLB is currently supported, however dynamic provisioning is NOT currently      #
@@ -287,18 +297,18 @@ metallb_ap4_cidr: '192.168.70.1/24'
 
 
 ###############################################################################################
-#                              -NGINX Ingress Controller Options-                             # 
+#                              -NGINX Ingress Controller Options-                             #
 ###############################################################################################
 # These parameters are only required if you want to enable the NGINX ingress controller.      #
 # REQUIREMENT: The NGINX Ingress controller integration requires a Load Balancer integration. #
 ###############################################################################################
 
-# The IP Address to use 
+# The IP Address to use
 nginx_load_balancer_ip: '192.168.0.100'
 
 
 ###############################################################################################
-#                                      -DataDog Options-                                      # 
+#                                      -DataDog Options-                                      #
 ###############################################################################################
 # These parameters are only required if you have an account with DataDog and would like to    #
 # enable metrics collection for your cluster.                                                 #

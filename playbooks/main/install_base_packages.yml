@@ -33,13 +33,13 @@
 
       - name: Adding the necessary GPG keys.
         become: yes
-        apt_key: 
+        apt_key:
             url: "{{ item }}"
         with_items:
             - "https://download.docker.com/linux/debian/gpg"
             - "https://packages.cloud.google.com/apt/doc/apt-key.gpg"
 
-      - name: Adding the necessary Apt repositories.
+      - name: Adding the necessary package repositories.
         become: yes
         apt_repository:
             repo: "{{ item }}"
@@ -49,13 +49,27 @@
 
       - name: Updating the package repositories.
         become: yes
-        apt: 
+        apt:
             update_cache: yes
 
       - name: Installing the required packages to bootstrap a kubernetes cluster.
         become: yes
         apt:
-            name: ['docker-ce', 'kubelet', 'kubeadm', 'kubectl']
+            name: ['docker-ce={{ docker_version }}', 'kubelet', 'kubeadm', 'kubectl']
+
+      - name: Setting Docker CGroup to systemd.
+        become: yes
+        shell: |
+            cat > /etc/docker/daemon.json <<EOF
+            {
+              "exec-opts": ["native.cgroupdriver=systemd"],
+              "log-driver": "json-file",
+              "log-opts": {
+                "max-size": "100m"
+              },
+              "storage-driver": "overlay2"
+            }
+            EOF
 
       - name: Installing the necessary Python library dependencies to use the `k8s` Ansible module.
         become: yes
@@ -65,7 +79,7 @@
 
       - name: Enabling the necessary Systemd modules.
         become: yes
-        systemd: 
+        systemd:
             state: started
             name: "{{ item }}"
             enabled: yes
@@ -81,6 +95,39 @@
             state: absent
             path: /etc/network/interfaces
             line: iface eth0 inet dhcp
+
+      - name: Ensuring that the br_netfilter kernel module is loaded.
+        modprobe:
+            name: br_netfilter
+            state: present
+
+      - name: Configuring iptables to route packets across the network bridge.
+        become: yes
+        sysctl:
+            name: "{{ entry }}"
+            value: 1
+            sysctl_set: yes
+        loop:
+            - net.bridge.bridge-nf-call-ip6tables
+            - net.bridge.bridge-nf-call-iptables
+        loop_control:
+            loop_var: entry
+
+      - name: Disabling Swap.
+        become: yes
+        mount:
+            name: "{{ filesystem }}"
+            fstype: swap
+            state: absent
+        loop:
+            - swap
+            - none
+        loop_control:
+            loop_var: filesystem
+
+      - name: Turning off swap.
+        become: yes
+        shell: swapoff -a
 
       - name: Rebooting the OS to switch to cloud-init provided network configuration & finalize any necessary package upgrades.
         become: yes

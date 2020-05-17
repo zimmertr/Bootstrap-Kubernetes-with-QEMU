@@ -6,12 +6,20 @@
         include_vars:
            file: ../../vars.yml
 
+      - name: Creating an service account to use with the Dashboard.
+        become: yes
+        k8s:
+            definition: "{{ lookup('template', '../../files/templates/Service_Account/{{ item }}') | from_yaml }}"
+        with_items:
+            - "sa_personal.yml.j2"
+            - "rb_personal.yml.j2"
+
       - name: Deploying the Kubernetes Dashboard.
         become: yes
         shell: kubectl apply -f {{ k8s_dashboard_url }}
 
       - name: Creating a directory for the Dashboard certificates.
-        file: 
+        file:
             path: /tmp/dashboard_cert
             state: directory
 
@@ -55,7 +63,7 @@
 
       - name: Removing the existing certificates Secret for the Dashboard.
         become: yes
-        shell: kubectl delete secret -n kubernetes-dashboard kubernetes-dashboard-certs 
+        shell: kubectl delete secret -n kubernetes-dashboard kubernetes-dashboard-certs
         when:
             - dashboard_load_balancer_address_pool is defined
             - dashboard_load_balancer_address_pool|length != 0
@@ -134,4 +142,16 @@
             - dashboard_load_balancer_ip|length != 0
             - dashboard_hostname is defined
             - dashboard_hostname|length !=0
+
+      - name: Retrieving the authentication token for your service user.
+        become: yes
+        shell: kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep {{ k8s_user_name }} | awk '{print $1}') | grep 'token:' | awk '{print $2}'
+        register: k8s_user_token
+
+      - name: Copying authentication token to your workstation.
+        local_action: copy content={{ k8s_user_token.stdout }} dest=~/.kube/authentication_token
+
+      - name: Echoing token to user.
+        debug:
+            msg: "Your Dashboard token can be found at ~/.kube/authentication_token."
 
