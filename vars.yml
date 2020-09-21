@@ -46,9 +46,9 @@ k8s_node3_hn: 'Haumea'
 
 # Number of CPUs
 k8s_master_cpu: '4'
-k8s_node1_cpu: '9'
-k8s_node2_cpu: '9'
-k8s_node3_cpu: '9'
+k8s_node1_cpu: '6'
+k8s_node2_cpu: '6'
+k8s_node3_cpu: '6'
 
 # Amount of memory expressed in megabytes
 k8s_master_mem: '20480'
@@ -57,10 +57,10 @@ k8s_node2_mem: '102400'
 k8s_node3_mem: '102400'
 
 # Disk Sizes
-k8s_master_size: '50G'
-k8s_node1_size: '50G'
-k8s_node2_size: '50G'
-k8s_node3_size: '50G'
+k8s_master_size: '30G'
+k8s_node1_size: '30G'
+k8s_node2_size: '30G'
+k8s_node3_size: '30G'
 
 # IP Addresses
 k8s_master_ip: '192.168.40.10'
@@ -81,10 +81,10 @@ k8s_node2_gw: '192.168.40.1'
 k8s_node3_gw: '192.168.40.1'
 
 # DNS Servers
-k8s_master_ns: '192.168.1.100'
-k8s_node1_ns: '192.168.1.100'
-k8s_node2_ns: '192.168.1.100'
-k8s_node3_ns: '192.168.1.100'
+k8s_master_ns: '192.168.1.110'
+k8s_node1_ns: '192.168.1.110'
+k8s_node2_ns: '192.168.1.110'
+k8s_node3_ns: '192.168.1.110'
 
 # Search Domains
 k8s_master_sd: 'sol.milkyway'
@@ -197,7 +197,7 @@ email_address: 'thomaszimmerman93@gmail.com'
 # mail_only_on_error: "true"
 
 # Only perform upgrades when a graceful OS shutdown occurs.
-#update_only_on_shutdown: "true"
+update_only_on_shutdown: "true"
 
 # Automatically remove unused kernel packages.
 # remove_unused_kernel_packages: "true"
